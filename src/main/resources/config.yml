@@ -1,0 +1,37 @@
+##################################################################################################
+#             _ _        _____                                _      _           _ _             #
+#            | | |      / ____|                              | |    (_)         (_) |            #
+#  _   _     | | |__   | |     __ _ _ __  _ __   ___  _ __   | |     _ _ __ ___  _| |_ ___ _ __  #
+# | | | |_   | | '_ \  | |    / _` | '_ \| '_ \ / _ \| '_ \  | |    | | '_ ` _ \| | __/ _ \ '__| #
+# | |_| | |__| | |_) | | |___| (_| | | | | | | | (_) | | | | | |____| | | | | | | | ||  __/ |    #
+#  \__, |\____/|_.__/   \_____\__,_|_| |_|_| |_|\___/|_| |_| |______|_|_| |_| |_|_|\__\___|_|    #
+#   __/ |                                                                                        #
+#  |___/                                                                                         #
+##################################################################################################
+
+####################################
+# YJB CANNON LIMITER v${version} by yJb #
+####################################
+
+#The maximum cannon speed to allow
+#Set this to -1 if you would like it to be unlimited (disabled)
+max-cannon-speed: 3.0
+
+allow-antipatch: true
+
+#All shots below this y-level will be ignored
+one-stacker-threshold: 10
+
+enabled-worlds:
+  - 'world'
+
+lang:
+  chat-prefix1: '&2&lYJB'
+  chat-prefix2: '&a&lCannonLimiter'
+  no-perms: '&cYou do not have sufficient permissions.'
+
+###############
+# PERMISSIONS #
+###############
+
+# yjbcannonlimiter.reload

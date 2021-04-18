@@ -1,0 +1,12 @@
+name: YJBCannonLimiter
+version: ${project.version}
+main: me.yjb.yjbcannonlimiter.YJBCannonLimiter
+api-version: 1.16
+commands:
+  yjbcannonlimiterreload:
+    description: Reloads the config for YJBCannonLimiter
+    aliases: [yjblimiterreload, limiterreload, yjbclr, cannonlimiterreload]
+    default: op
+permissions:
+  yjbcannonlimiter.reload:
+    description: Permission to use /yjbcannonlimiterreload.
