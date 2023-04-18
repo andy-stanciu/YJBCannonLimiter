@@ -26,15 +26,32 @@ public class WebClient extends WebSocketClient
     @Override
     public void onMessage(String message)
     {
+        switch (message.substring(0, 4))
+        {
+            case "lic:":
+                readValidationResponse(message.substring(4));
+                break;
+        }
+    }
+
+    private void readValidationResponse(String message)
+    {
         String[] information = message.split("/");
+
         if (information.length == 1)
         {
             this.core.setValid(false);
         }
+        else if (information.length == 2)
+        {
+            this.core.setClientIP(information[1].trim());
+            this.core.setValid(false);
+        }
         else
         {
+            this.core.setClientIP(information[1].trim());
+            this.core.setClientName(information[2].trim());
             this.core.setValid(information[0].trim().equalsIgnoreCase("1"));
-            this.core.setClientName(information[1].trim());
         }
     }
 

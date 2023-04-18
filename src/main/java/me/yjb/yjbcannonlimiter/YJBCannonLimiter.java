@@ -8,25 +8,26 @@ import me.yjb.yjbcannonlimiter.util.APStatus;
 import me.yjb.yjbcannonlimiter.util.LocationStatus;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.PrintStream;
 import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public final class YJBCannonLimiter extends JavaPlugin
 {
-    private final String product = "YJBCannonLimiter";
-    private final String server = "yjb.crystaldev.co";
+    private final String version = "1.2.0";
+    private final String product = "1";
+    private final String server = "20.102.121.128:20500";
     private final long TIMEOUT = 5000;
     private PrintStream licenseOut;
     private Scanner licenseIn;
     private String hardwareID = null;
     private boolean valid = false;
     private String clientName = null;
+    private String clientIP = null;
 
     private final String prefix = ChatColor.DARK_GRAY + "[" + getConfig().getString("lang.chat-prefix1") +
             getConfig().getString("lang.chat-prefix2") + ChatColor.DARK_GRAY + "] " + ChatColor.WHITE;
@@ -44,6 +45,7 @@ public final class YJBCannonLimiter extends JavaPlugin
     public String getLine() { return this.line; }
     public void setValid(boolean valid) { this.valid = valid; }
     public void setClientName(String clientName) { this.clientName = clientName; }
+    public void setClientIP(String clientIP) { this.clientIP = clientIP; }
 
     private final Reload reload = new Reload(this);
     private final ExplodeEvent explodeEvent = new ExplodeEvent(this);
@@ -66,29 +68,28 @@ public final class YJBCannonLimiter extends JavaPlugin
         getConfig().options().copyDefaults();
         saveDefaultConfig();
 
-        this.hardwareID = getHwid();
-        boolean isLicensed = isHwidRegistered();
+        boolean isLicensed = isIPRegistered();
 
         if (License.setup())
         {
             this.licenseOut = License.getPrintStream();
-            this.licenseOut.println(this.hardwareID);
+            this.licenseOut.println(this.clientIP);
         }
         else
         {
             this.licenseIn = License.getScanner();
-            String currentHwid = this.licenseIn.nextLine().trim();
+            String currentIP = this.licenseIn.nextLine().trim();
 
-            if (!this.hardwareID.equals(currentHwid))
+            if (!this.clientIP.equals(currentIP))
             {
                 this.licenseOut = License.getPrintStream();
-                this.licenseOut.println(this.hardwareID);
+                this.licenseOut.println(this.clientIP);
             }
         }
 
         if (!isLicensed)
         {
-            System.out.println("[YJBCannonLimiter] Your HWID is not licensed; disabling YJBCannonLimiter.");
+            System.out.println("[YJBCannonLimiter] Your server's IP is not whitelisted; disabling YJBCannonLimiter.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
@@ -126,51 +127,51 @@ public final class YJBCannonLimiter extends JavaPlugin
 
     public String color(String text) { return ChatColor.translateAlternateColorCodes('&', text); }
 
-    private boolean isHwidRegistered()
+    private boolean isIPRegistered()
     {
-        System.out.println("[YJBCannonLimiter] Verifying HWID...");
+        System.out.println("[YJBCannonLimiter] Validating IP...");
 
         try
         {
             WebClient webClient = new WebClient(new URI("ws://" + this.server), this);
             webClient.connectBlocking();
-            webClient.send(this.product + "/" + this.hardwareID);
+
+            webClient.send("lic:" + this.product + "/" + this.version + "/" + Bukkit.getServer().getServerName() + "/" + getOperators());
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
 
-        long currentTime = System.currentTimeMillis();
-
-        while (!this.valid && System.currentTimeMillis() - currentTime < TIMEOUT) {}
+        pauseThread();
 
         return this.valid;
     }
 
-    private String getHwid()
+    private String getOperators()
     {
-        try
+        Set<OfflinePlayer> players = Bukkit.getServer().getOperators();
+
+        String operators = "";
+
+        int i = 0;
+        for (OfflinePlayer player : players)
         {
-            String main = System.getenv("PROCESSOR_IDENTIFIER") + System.getProperty("user.name").trim() + System.getenv("COMPUTERNAME");
-            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-            StringBuilder hwid = new StringBuilder();
-
-            byte[] hash = messageDigest.digest(main.getBytes());
-
-            for (int i = 0; i < hash.length; i++)
-            {
-                hwid.append(Integer.toHexString(hash[i] & 0xFF | 0x300).substring(0, 3));
-                if (i != hash.length - 1) hwid.append("-");
-            }
-
-            return hwid.toString();
-        }
-        catch (NoSuchAlgorithmException e)
-        {
-            e.printStackTrace();
+            if (i != 0) operators += ",";
+            operators += player.getName();
+            i++;
         }
 
-        return null;
+        return operators;
+    }
+
+    private void pauseThread()
+    {
+        long currentTime = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - currentTime < TIMEOUT)
+        {
+            if (this.valid) return;
+        }
     }
 }
