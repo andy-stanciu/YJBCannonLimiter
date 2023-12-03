@@ -2,32 +2,18 @@ package me.yjb.yjbcannonlimiter;
 
 import me.yjb.yjbcannonlimiter.commands.Reload;
 import me.yjb.yjbcannonlimiter.events.ExplodeEvent;
-import me.yjb.yjbcannonlimiter.network.WebClient;
 import me.yjb.yjbcannonlimiter.threads.TimerTask;
 import me.yjb.yjbcannonlimiter.util.APStatus;
 import me.yjb.yjbcannonlimiter.util.LocationStatus;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-
-import java.io.PrintStream;
-import java.net.URI;
 import java.util.*;
 
 public final class YJBCannonLimiter extends JavaPlugin
 {
-    private final String version = "1.2.0";
-    private final String product = "1";
-    private final String server = "20.102.121.128:20500";
-    private final long TIMEOUT = 5000;
-    private PrintStream licenseOut;
-    private Scanner licenseIn;
-    private String hardwareID = null;
-    private boolean valid = false;
-    private String clientName = null;
-    private String clientIP = null;
+    private final String version = "1.3.0";
 
     private final String prefix = ChatColor.DARK_GRAY + "[" + getConfig().getString("lang.chat-prefix1") +
             getConfig().getString("lang.chat-prefix2") + ChatColor.DARK_GRAY + "] " + ChatColor.WHITE;
@@ -43,9 +29,6 @@ public final class YJBCannonLimiter extends JavaPlugin
     public BukkitTask getGarbageCollector() { return this.garbageCollector; }
     public String getPrefix() { return color(this.prefix); }
     public String getLine() { return this.line; }
-    public void setValid(boolean valid) { this.valid = valid; }
-    public void setClientName(String clientName) { this.clientName = clientName; }
-    public void setClientIP(String clientIP) { this.clientIP = clientIP; }
 
     private final Reload reload = new Reload(this);
     private final ExplodeEvent explodeEvent = new ExplodeEvent(this);
@@ -63,38 +46,10 @@ public final class YJBCannonLimiter extends JavaPlugin
     @Override
     public void onEnable()
     {
-        this.valid = false;
-
         getConfig().options().copyDefaults();
         saveDefaultConfig();
 
-        boolean isLicensed = isIPRegistered();
-
-        if (License.setup())
-        {
-            this.licenseOut = License.getPrintStream();
-            this.licenseOut.println(this.clientIP);
-        }
-        else
-        {
-            this.licenseIn = License.getScanner();
-            String currentIP = this.licenseIn.nextLine().trim();
-
-            if (!this.clientIP.equals(currentIP))
-            {
-                this.licenseOut = License.getPrintStream();
-                this.licenseOut.println(this.clientIP);
-            }
-        }
-
-        if (!isLicensed)
-        {
-            System.out.println("[YJBCannonLimiter] Your server's IP is not whitelisted; disabling YJBCannonLimiter.");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
-
-        System.out.println("[YJBCannonLimiter] Hello " + this.clientName + ", YJBCannonLimiter is starting up!");
+        System.out.println("[YJBCannonLimiter] Hello Unlicensed User, YJBCannonLimiter is starting up!");
 
         refreshConfigValues();
 
@@ -126,52 +81,4 @@ public final class YJBCannonLimiter extends JavaPlugin
     }
 
     public String color(String text) { return ChatColor.translateAlternateColorCodes('&', text); }
-
-    private boolean isIPRegistered()
-    {
-        System.out.println("[YJBCannonLimiter] Validating IP...");
-
-        try
-        {
-            WebClient webClient = new WebClient(new URI("ws://" + this.server), this);
-            webClient.connectBlocking();
-
-            webClient.send("lic:" + this.product + "/" + this.version + "/" + Bukkit.getServer().getServerName() + "/" + getOperators());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        pauseThread();
-
-        return this.valid;
-    }
-
-    private String getOperators()
-    {
-        Set<OfflinePlayer> players = Bukkit.getServer().getOperators();
-
-        String operators = "";
-
-        int i = 0;
-        for (OfflinePlayer player : players)
-        {
-            if (i != 0) operators += ",";
-            operators += player.getName();
-            i++;
-        }
-
-        return operators;
-    }
-
-    private void pauseThread()
-    {
-        long currentTime = System.currentTimeMillis();
-
-        while (System.currentTimeMillis() - currentTime < TIMEOUT)
-        {
-            if (this.valid) return;
-        }
-    }
 }
